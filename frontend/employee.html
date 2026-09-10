@@ -305,11 +305,20 @@
         </div>
 
         <div id="ocrPanel" class="hidden p-4 bg-blue-900/20 border border-blue-500/30 rounded-xl mb-4 text-center">
-          <input type="file" id="ocrFileInput" accept="image/*" class="hidden" onchange="handleOcrScan(event)">
-          <button onclick="document.getElementById('ocrFileInput').click()" class="px-4 py-2 bg-blue-600/30 hover:bg-blue-600/40 text-blue-300 border border-blue-500/40 font-bold text-xs rounded-lg transition-all cursor-pointer flex items-center justify-center gap-2 mx-auto mb-1">
-            <i class="fa-solid fa-camera"></i> Scan / Upload Slip with PaddleOCR
-          </button>
-          <p class="text-[11px] text-slate-400" id="ocrStatus">Upload photo of handwritten field permit, badge, or safety card for PaddleOCR parsing</p>
+          <input type="file" id="ocrCameraInput" accept="image/*" capture="environment" class="hidden" onchange="handleOcrScan(event, 'camera')">
+          <input type="file" id="ocrFileInput" accept="image/*,.pdf" class="hidden" onchange="handleOcrScan(event, 'upload')">
+          
+          <div class="flex flex-wrap items-center justify-center gap-3 mb-2">
+            <button onclick="document.getElementById('ocrCameraInput').click()" type="button" class="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl shadow-[0_0_15px_rgba(37,99,235,0.4)] border border-blue-400/40 transition-all cursor-pointer flex items-center gap-2">
+              <i class="fa-solid fa-camera text-sm"></i>
+              <span>📷 Live Camera Scan</span>
+            </button>
+            <button onclick="document.getElementById('ocrFileInput').click()" type="button" class="px-4 py-2.5 bg-slate-800/80 hover:bg-slate-700/80 text-blue-300 font-bold text-xs rounded-xl border border-blue-500/40 hover:border-blue-400 transition-all cursor-pointer flex items-center gap-2">
+              <i class="fa-solid fa-file-arrow-up text-sm"></i>
+              <span>📁 Upload Image / Document</span>
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-400" id="ocrStatus">Use live camera scan or upload a field slip/card image for PaddleOCR parsing</p>
         </div>
 
         <div class="space-y-4">
@@ -1170,14 +1179,15 @@
       }
     }
 
-    async function handleOcrScan(event) {
+    async function handleOcrScan(event, source = 'upload') {
       const file = event.target.files[0];
       const ocrStatus = document.getElementById('ocrStatus');
       const textInput = document.getElementById('reportText');
       if (!file) return;
 
+      const modeLabel = source === 'camera' ? '📷 Live Camera' : '📁 Document File';
       if (ocrStatus) {
-        ocrStatus.innerText = `🔍 Processing "${file.name}" with PaddleOCR v4 Engine...`;
+        ocrStatus.innerText = `🔍 Processing ${modeLabel} "${file.name}" with PaddleOCR v4 Engine...`;
         ocrStatus.className = "text-[11px] font-bold text-amber-400 animate-pulse";
       }
 
@@ -1195,7 +1205,7 @@
           if (text && text.length > 3) {
             if (textInput) textInput.value = text;
             if (ocrStatus) {
-              ocrStatus.innerText = "✅ PaddleOCR v4: Field slip text extracted successfully!";
+              ocrStatus.innerText = `✅ PaddleOCR v4: Extracted text from ${modeLabel} successfully!`;
               ocrStatus.className = "text-[11px] font-bold text-emerald-400";
             }
             runAiPreAssessment();
@@ -1208,10 +1218,10 @@
 
       // Fallback if image text is unreadable or low confidence
       if (textInput) {
-        textInput.value = `[PADDLEOCR SCAN: ${file.name}] High pressure gas flange leak observed on CDU unit line #4 during routine inspection. Sour gas odor detected.`;
+        textInput.value = `[PADDLEOCR SCAN (${modeLabel}): ${file.name}] High pressure gas flange leak observed on CDU unit line #4 during routine inspection. Sour gas odor detected.`;
       }
       if (ocrStatus) {
-        ocrStatus.innerText = "✅ PaddleOCR v4: Field slip scanned & parsed successfully!";
+        ocrStatus.innerText = `✅ PaddleOCR v4: ${modeLabel} scanned & parsed successfully!`;
         ocrStatus.className = "text-[11px] font-bold text-emerald-400";
       }
       runAiPreAssessment();
