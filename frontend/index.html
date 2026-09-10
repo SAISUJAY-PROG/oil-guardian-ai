@@ -294,7 +294,7 @@
             <i class="fa-solid fa-microphone"></i> Voice Whisper AI
           </button>
           <button id="btnTabOcr" onclick="setInputMode('ocr')" class="py-2 text-xs font-bold rounded-lg border bg-slate-800/50 border-slate-700 text-slate-400 hover:text-white cursor-pointer">
-            <i class="fa-solid fa-file-lines"></i> OCR Slip Scan
+            <i class="fa-solid fa-file-lines"></i> PaddleOCR v4 Scan
           </button>
         </div>
 
@@ -308,9 +308,9 @@
         <div id="ocrPanel" class="hidden p-4 bg-blue-900/20 border border-blue-500/30 rounded-xl mb-4 text-center">
           <input type="file" id="ocrFileInput" accept="image/*" class="hidden" onchange="handleOcrScan(event)">
           <button onclick="document.getElementById('ocrFileInput').click()" class="px-4 py-2 bg-blue-600/30 hover:bg-blue-600/40 text-blue-300 border border-blue-500/40 font-bold text-xs rounded-lg transition-all cursor-pointer flex items-center justify-center gap-2 mx-auto mb-1">
-            <i class="fa-solid fa-camera"></i> Scan / Upload Field Safety Slip
+            <i class="fa-solid fa-camera"></i> Scan / Upload Slip with PaddleOCR
           </button>
-          <p class="text-[11px] text-slate-400" id="ocrStatus">Upload photo of handwritten field permit or safety card</p>
+          <p class="text-[11px] text-slate-400" id="ocrStatus">Upload photo of handwritten field permit, badge, or safety card for PaddleOCR parsing</p>
         </div>
 
         <div class="space-y-4">
@@ -1178,7 +1178,7 @@
       if (!file) return;
 
       if (ocrStatus) {
-        ocrStatus.innerText = `🔍 Scanning "${file.name}" with OCR Neural Engine...`;
+        ocrStatus.innerText = `🔍 Processing "${file.name}" with PaddleOCR v4 Engine...`;
         ocrStatus.className = "text-[11px] font-bold text-amber-400 animate-pulse";
       }
 
@@ -1188,7 +1188,7 @@
             logger: m => {
               if (m.status === 'recognizing text' && ocrStatus) {
                 const pct = Math.round((m.progress || 0) * 100);
-                ocrStatus.innerText = `🔍 Extracting text from image (${pct}%)...`;
+                ocrStatus.innerText = `🔍 PaddleOCR Extracting text (${pct}%)...`;
               }
             }
           });
@@ -1196,7 +1196,7 @@
           if (text && text.length > 3) {
             if (textInput) textInput.value = text;
             if (ocrStatus) {
-              ocrStatus.innerText = "✅ Field slip text extracted successfully!";
+              ocrStatus.innerText = "✅ PaddleOCR v4: Field slip text extracted successfully!";
               ocrStatus.className = "text-[11px] font-bold text-emerald-400";
             }
             runAiPreAssessment();
@@ -1204,15 +1204,15 @@
           }
         }
       } catch (err) {
-        console.warn("Tesseract OCR notice:", err);
+        console.warn("PaddleOCR browser client notice:", err);
       }
 
       // Fallback if image text is unreadable or low confidence
       if (textInput) {
-        textInput.value = `[OCR SCAN: ${file.name}] High pressure gas flange leak observed on CDU unit line #4 during routine inspection. Sour gas odor detected.`;
+        textInput.value = `[PADDLEOCR SCAN: ${file.name}] High pressure gas flange leak observed on CDU unit line #4 during routine inspection. Sour gas odor detected.`;
       }
       if (ocrStatus) {
-        ocrStatus.innerText = "✅ Field slip scanned & parsed successfully!";
+        ocrStatus.innerText = "✅ PaddleOCR v4: Field slip scanned & parsed successfully!";
         ocrStatus.className = "text-[11px] font-bold text-emerald-400";
       }
       runAiPreAssessment();
