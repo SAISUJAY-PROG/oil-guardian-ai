@@ -13,7 +13,7 @@ def _load_paddle_ocr():
         return _ocr_engine
     _ocr_attempted = True
     try:
-        from paddleocr import PaddleOCR
+        from paddleocr import PaddleOCR  # type: ignore
         # Initialize PaddleOCR with English language model and angle classification
         _ocr_engine = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
         logging.info("PaddleOCR engine initialized successfully.")
