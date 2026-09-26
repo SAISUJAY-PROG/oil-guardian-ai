@@ -1,8 +1,0 @@
-streamlit>=1.30.0
-pandas
-numpy
-joblib
-scikit-learn
-xgboost
-sentence-transformers
-paddleocr
