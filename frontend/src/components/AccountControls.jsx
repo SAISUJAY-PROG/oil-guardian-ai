@@ -1,161 +1,76 @@
 import { useState } from "react";
-import {
-  UserCircle,
-  LogOut,
-  ChevronDown,
-  X,
-  HardHat,
-  ShieldCheck
-} from "lucide-react";
+import { User, Power, X, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
-function AccountControls({ role = "Employee" }) {
-  const [open, setOpen] = useState(false);
+export default function AccountControls({ role }) {
+  const [showProfile, setShowProfile] = useState(false);
   const navigate = useNavigate();
-
-  const isEmployee = role === "Employee";
-
-  const profile = isEmployee
-    ? {
-        id: "oil-79655",
-        job: "Field Technician / Senior Roughneck",
-        certification: "OISD Certified Active",
-        company: "Oil India Limited",
-        division: "Exploration & Production (E&P)",
-        incidents: "3 Reports",
-        station: "Duliajan Oilfield · Rig 04"
-      }
-    : {
-        id: "oil-so-2041",
-        job: "Safety Officer",
-        certification: "OISD Certified Active",
-        company: "Oil India Limited",
-        division: "Health, Safety & Environment",
-        incidents: "17 Reports",
-        station: "Duliajan Oilfield · Safety Command"
-      };
-
-  const handleLogout = () => {
-    setOpen(false);
-    navigate("/");
-  };
 
   return (
     <>
       <div className="account-controls">
-
         <button
-          className="account-user-button"
-          onClick={() => setOpen(true)}
+          className="account-user-button cursor-target"
+          onClick={() => setShowProfile(true)}
         >
-          <span className="account-user-icon">
-            {isEmployee ? (
-              <HardHat size={16} />
-            ) : (
-              <ShieldCheck size={16} />
-            )}
-          </span>
-
-          <span className="account-user-id">
-            {profile.id}
-          </span>
-
-          <ChevronDown size={15} />
+          <div className="profile-icon-blue"><User size={14} /></div>
+          {role} (Active)
+          <ChevronDown size={14} className="text-muted" />
         </button>
-
         <button
-          className="account-logout-button"
-          onClick={handleLogout}
+          className="account-logout-button cursor-target"
+          onClick={() => navigate("/")}
+          title="Secure Logout"
         >
-          <LogOut size={16} />
+          <Power size={14} />
           <span>Logout</span>
         </button>
-
       </div>
 
-      {open && (
-        <div
-          className="profile-overlay"
-          onClick={() => setOpen(false)}
-        >
-
-          <div
-            className="profile-modal"
-            onClick={(event) => event.stopPropagation()}
+      <AnimatePresence>
+        {showProfile && (
+          <motion.div
+            className="profile-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           >
+            <div className="profile-modal">
+              <button
+                className="profile-close cursor-target"
+                onClick={() => setShowProfile(false)}
+              >
+                <X size={24} />
+              </button>
 
-            <button
-              className="profile-close"
-              onClick={() => setOpen(false)}
-            >
-              <X size={25} />
-            </button>
-
-            <div className="profile-header">
-
-              <div className="profile-avatar">
-                {isEmployee ? (
-                  <HardHat size={39} />
-                ) : (
-                  <ShieldCheck size={39} />
-                )}
+              <div className="profile-header">
+                <div className="profile-avatar"><User size={34} /></div>
+                <div className="profile-heading">
+                  <h2>Mahamad Huzaif Patel</h2>
+                  <h3>{role}</h3>
+                  <span className="profile-certification">OISD Certified Active</span>
+                </div>
               </div>
 
-              <div className="profile-heading">
+              <div className="profile-divider" />
 
-                <h2>{profile.id}</h2>
-
-                <h3>{profile.job}</h3>
-
-                <span className="profile-certification">
-                  {profile.certification}
-                </span>
-
+              <div className="profile-info">
+                <div className="profile-row"><span>Company</span><strong>Oil India Limited</strong></div>
+                <div className="profile-row"><span>Primary Division</span><strong>Exploration & Production (E&P)</strong></div>
+                <div className="profile-row"><span>Current Status</span><strong className="text-green">Active on Station</strong></div>
               </div>
 
+              <button
+                className="close-profile-button cursor-target"
+                onClick={() => setShowProfile(false)}
+              >
+                Close Profile
+              </button>
             </div>
-
-            <div className="profile-divider" />
-
-            <div className="profile-info">
-
-              <div className="profile-row">
-                <span>Company</span>
-                <strong>{profile.company}</strong>
-              </div>
-
-              <div className="profile-row">
-                <span>Primary Division</span>
-                <strong>{profile.division}</strong>
-              </div>
-
-              <div className="profile-row">
-                <span>Total Incidents Logged</span>
-                <strong className="profile-orange">
-                  {profile.incidents}
-                </strong>
-              </div>
-
-              <div className="profile-row">
-                <span>Last Active Station</span>
-                <strong>{profile.station}</strong>
-              </div>
-
-            </div>
-
-            <button
-              className="close-profile-button"
-              onClick={() => setOpen(false)}
-            >
-              Close Profile
-            </button>
-
-          </div>
-
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
-
-export default AccountControls;
