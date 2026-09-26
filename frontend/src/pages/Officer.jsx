@@ -1,211 +1,370 @@
+import { useState } from "react";
 import {
-  ArrowLeft,
   ShieldCheck,
-  Activity,
   AlertTriangle,
-  Brain,
+  CheckCircle,
+  Activity,
   TrendingUp,
   FileWarning,
-  CheckCircle
+  Clock,
+  Eye,
+  Filter
 } from "lucide-react";
 
-import {
-  Link
-} from "react-router-dom";
-
+import AccountControls from "../components/AccountControls";
 
 function Officer() {
+  const [filter, setFilter] = useState("All");
 
   const reports = [
     {
-      id: "RPT-128",
-      observation: "Confined space gas test missing",
-      risk: 82,
-      status: "High Risk"
+      id: "06-2026-7052",
+      category: "Unsafe Condition",
+      risk: "High Risk",
+      sif: "78.4%",
+      location: "Duliajan Oilfield",
+      department: "Drilling Operations",
+      status: "Open",
+      time: "12 min ago"
     },
     {
-      id: "RPT-127",
-      observation: "Improper PPE usage",
-      risk: 58,
-      status: "Review"
+      id: "06-2026-7048",
+      category: "Unsafe Act",
+      risk: "High Risk",
+      sif: "72.1%",
+      location: "Duliajan Oilfield",
+      department: "Maintenance",
+      status: "Under Review",
+      time: "28 min ago"
     },
     {
-      id: "RPT-126",
-      observation: "Oil leakage near flange",
-      risk: 74,
-      status: "High Risk"
+      id: "06-2026-7039",
+      category: "Near Miss",
+      risk: "Medium Risk",
+      sif: "48.5%",
+      location: "Digboi Refinery",
+      department: "Production Operations",
+      status: "Resolved",
+      time: "1 hr ago"
     },
     {
-      id: "RPT-125",
-      observation: "Damaged electrical cable",
-      risk: 41,
-      status: "Resolved"
+      id: "06-2026-7027",
+      category: "Unsafe Condition",
+      risk: "Medium Risk",
+      sif: "43.7%",
+      location: "Duliajan Oilfield",
+      department: "Electrical Operations",
+      status: "Under Review",
+      time: "2 hrs ago"
+    },
+    {
+      id: "06-2026-7015",
+      category: "Near Miss",
+      risk: "Low Risk",
+      sif: "21.6%",
+      location: "Numaligarh Refinery",
+      department: "HSE Department",
+      status: "Resolved",
+      time: "3 hrs ago"
     }
   ];
 
+  const filteredReports =
+    filter === "All"
+      ? reports
+      : reports.filter(
+          (report) => report.risk === filter
+        );
 
   return (
-
     <div className="officer-page">
 
-      <nav className="dashboard-navbar">
+      <AccountControls role="Safety Officer" />
 
-        <Link
-          to="/"
-          className="back-link"
-        >
-          <ArrowLeft size={18} />
-          Home
-        </Link>
+      <main className="officer-container">
 
-
-        <div className="dashboard-brand">
-
-          <ShieldCheck size={28} />
+        <div className="officer-header">
 
           <div>
 
-            <strong>
-              OIL Guardian AI
-            </strong>
-
-            <span>
-              Safety Officer Dashboard
-            </span>
-
-          </div>
-
-        </div>
-
-        <div />
-
-      </nav>
-
-
-      <main className="dashboard-container">
-
-        <div className="dashboard-heading">
-
-          <div>
-
-            <span>
-              SAFETY INTELLIGENCE
-            </span>
+            <div className="officer-eyebrow">
+              SAFETY OPERATIONS COMMAND
+            </div>
 
             <h1>
-              Officer Dashboard
+              Safety Officer Dashboard
             </h1>
 
             <p>
-              Monitor AI-assisted safety risk analysis.
+              Monitor industrial safety reports,
+              AI risk analysis, and active hazards.
             </p>
 
           </div>
 
-          <div className="dashboard-status">
-
-            <Activity size={18} />
-
-            AI System Online
-
+          <div className="officer-live-status">
+            <span />
+            SYSTEM ONLINE
           </div>
 
         </div>
 
+        <section className="officer-stat-grid">
 
-        <section className="stats-grid">
+          <div className="officer-stat-card">
 
-          <StatCard
-            icon={<FileWarning />}
-            title="Total Reports"
-            value="128"
-          />
-
-          <StatCard
-            icon={<AlertTriangle />}
-            title="High Risk Reports"
-            value="17"
-          />
-
-          <StatCard
-            icon={<CheckCircle />}
-            title="Resolved"
-            value="94"
-          />
-
-          <StatCard
-            icon={<TrendingUp />}
-            title="Average Risk"
-            value="28%"
-          />
-
-        </section>
-
-
-        <section className="ensemble-dashboard-card">
-
-          <div className="ensemble-header">
-
-            <div>
-
-              <span>
-                HETEROGENEOUS ENSEMBLE
-              </span>
-
-              <h2>
-                AI Safety Analysis
-              </h2>
-
+            <div className="officer-stat-icon">
+              <FileWarning size={21} />
             </div>
 
-            <Brain size={28} />
+            <div>
+              <span>
+                TOTAL REPORTS
+              </span>
+
+              <strong>
+                128
+              </strong>
+
+              <small>
+                +12 this week
+              </small>
+            </div>
 
           </div>
 
+          <div className="officer-stat-card">
 
-          <div className="ensemble-main">
+            <div className="officer-stat-icon">
+              <AlertTriangle size={21} />
+            </div>
+
+            <div>
+              <span>
+                HIGH RISK
+              </span>
+
+              <strong>
+                17
+              </strong>
+
+              <small>
+                Requires attention
+              </small>
+            </div>
+
+          </div>
+
+          <div className="officer-stat-card">
+
+            <div className="officer-stat-icon">
+              <CheckCircle size={21} />
+            </div>
+
+            <div>
+              <span>
+                RESOLVED
+              </span>
+
+              <strong>
+                94
+              </strong>
+
+              <small>
+                73.4% of reports
+              </small>
+            </div>
+
+          </div>
+
+          <div className="officer-stat-card">
+
+            <div className="officer-stat-icon">
+              <Activity size={21} />
+            </div>
+
+            <div>
+              <span>
+                AVERAGE SIF RISK
+              </span>
+
+              <strong>
+                28%
+              </strong>
+
+              <small>
+                Across all reports
+              </small>
+            </div>
+
+          </div>
+
+        </section>
+
+        <section className="officer-analysis">
+
+          <div className="section-heading">
+
+            <div>
+              <div className="section-label">
+                <TrendingUp size={15} />
+                AI ENSEMBLE ANALYSIS
+              </div>
+
+              <h2>
+                Current Safety Risk Overview
+              </h2>
+            </div>
+
+            <span className="moderate-badge">
+              Moderate Risk
+            </span>
+
+          </div>
+
+          <div className="ensemble-overview">
 
             <div className="ensemble-score">
 
               <span>
-                SIF Probability
+                OVERALL SIF PROBABILITY
               </span>
 
               <strong>
-                24%
+                24.0%
               </strong>
 
-              <div className="dashboard-progress">
-
+              <div className="risk-progress">
                 <div
+                  className="risk-progress-value"
                   style={{
                     width: "24%"
                   }}
                 />
+              </div>
+
+            </div>
+
+            <div className="ensemble-info">
+
+              <div>
+                <span>
+                  Near Miss
+                </span>
+
+                <strong>
+                  18%
+                </strong>
+              </div>
+
+              <div>
+                <span>
+                  Unsafe Act
+                </span>
+
+                <strong>
+                  31%
+                </strong>
+              </div>
+
+              <div>
+                <span>
+                  Unsafe Condition
+                </span>
+
+                <strong>
+                  22%
+                </strong>
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+        <section className="officer-models">
+
+          <div className="section-heading">
+
+            <div>
+              <div className="section-label">
+                <ShieldCheck size={15} />
+                SPECIALIST MODELS
+              </div>
+
+              <h2>
+                Model Predictions
+              </h2>
+            </div>
+
+          </div>
+
+          <div className="model-card-grid">
+
+            <div className="officer-model-card">
+
+              <div className="model-card-top">
+
+                <span>
+                  NEAR MISS
+                </span>
+
+                <Activity size={17} />
 
               </div>
 
+              <strong>
+                18%
+              </strong>
+
               <small>
-                Demo dashboard value
+                Incident Prevention
               </small>
 
             </div>
 
+            <div className="officer-model-card">
 
-            <div className="risk-status">
+              <div className="model-card-top">
 
-              <span>
-                Risk Level
-              </span>
+                <span>
+                  UNSAFE ACT
+                </span>
+
+                <Activity size={17} />
+
+              </div>
 
               <strong>
-                Moderate
+                31%
               </strong>
 
-              <p>
-                Final value will come from
-                FastAPI soft voting.
-              </p>
+              <small>
+                Safe Work Practice
+              </small>
+
+            </div>
+
+            <div className="officer-model-card">
+
+              <div className="model-card-top">
+
+                <span>
+                  UNSAFE CONDITION
+                </span>
+
+                <Activity size={17} />
+
+              </div>
+
+              <strong>
+                22%
+              </strong>
+
+              <small>
+                Worksite Condition
+              </small>
 
             </div>
 
@@ -213,133 +372,156 @@ function Officer() {
 
         </section>
 
-
-        <section className="specialist-section">
-
-          <div className="section-heading">
-
-            <span>
-              MODEL BREAKDOWN
-            </span>
-
-            <h2>
-              Specialist Predictions
-            </h2>
-
-          </div>
-
-
-          <div className="specialist-grid">
-
-            <ModelCard
-              name="Near Miss"
-              probability="18%"
-              icon={<Activity />}
-            />
-
-            <ModelCard
-              name="Unsafe Act"
-              probability="31%"
-              icon={<AlertTriangle />}
-            />
-
-            <ModelCard
-              name="Unsafe Condition"
-              probability="22%"
-              icon={<ShieldCheck />}
-            />
-
-          </div>
-
-        </section>
-
-
         <section className="reports-section">
 
-          <div className="section-heading">
+          <div className="reports-header">
 
-            <span>
-              RECENT ACTIVITY
-            </span>
+            <div>
 
-            <h2>
-              Safety Reports
-            </h2>
+              <div className="section-label">
+                <FileWarning size={15} />
+                SAFETY REPORTS
+              </div>
+
+              <h2>
+                Recent Reports
+              </h2>
+
+            </div>
+
+            <div className="report-filter">
+
+              <Filter size={14} />
+
+              <select
+                value={filter}
+                onChange={(event) =>
+                  setFilter(event.target.value)
+                }
+              >
+                <option value="All">
+                  All
+                </option>
+
+                <option value="High Risk">
+                  High Risk
+                </option>
+
+                <option value="Medium Risk">
+                  Medium Risk
+                </option>
+
+                <option value="Low Risk">
+                  Low Risk
+                </option>
+              </select>
+
+            </div>
 
           </div>
-
 
           <div className="reports-table-wrapper">
 
-            <table>
+            <table className="reports-table">
 
               <thead>
 
                 <tr>
-
-                  <th>
-                    Report
-                  </th>
-
-                  <th>
-                    Observation
-                  </th>
-
-                  <th>
-                    Risk
-                  </th>
-
-                  <th>
-                    Status
-                  </th>
-
+                  <th>REPORT</th>
+                  <th>CATEGORY</th>
+                  <th>SIF RISK</th>
+                  <th>LOCATION</th>
+                  <th>STATUS</th>
+                  <th>TIME</th>
+                  <th></th>
                 </tr>
 
               </thead>
 
-
               <tbody>
 
-                {reports.map(
-                  (report) => (
+                {filteredReports.map((report) => (
+                  <tr key={report.id}>
 
-                    <tr key={report.id}>
-
-                      <td>
+                    <td>
+                      <strong className="report-id">
                         {report.id}
-                      </td>
+                      </strong>
 
-                      <td>
-                        {report.observation}
-                      </td>
+                      <small>
+                        {report.department}
+                      </small>
+                    </td>
 
-                      <td>
-                        <strong>
-                          {report.risk}%
-                        </strong>
-                      </td>
+                    <td>
+                      <span className="category-text">
+                        {report.category}
+                      </span>
+                    </td>
 
-                      <td>
+                    <td>
 
-                        <span
-                          className={`status-badge ${
-                            report.status
-                              .toLowerCase()
-                              .replace(
-                                " ",
-                                "-"
-                              )
-                          }`}
-                        >
-                          {report.status}
-                        </span>
+                      <span
+                        className={`table-risk ${
+                          report.risk === "High Risk"
+                            ? "table-risk-high"
+                            : report.risk ===
+                              "Low Risk"
+                            ? "table-risk-low"
+                            : "table-risk-medium"
+                        }`}
+                      >
+                        {report.sif}
+                      </span>
 
-                      </td>
+                    </td>
 
-                    </tr>
+                    <td>
+                      <span className="location-text">
+                        {report.location}
+                      </span>
+                    </td>
 
-                  )
-                )}
+                    <td>
+
+                      <span
+                        className={`report-status ${
+                          report.status ===
+                          "Resolved"
+                            ? "status-resolved"
+                            : report.status ===
+                              "Open"
+                            ? "status-open"
+                            : "status-review"
+                        }`}
+                      >
+                        {report.status}
+                      </span>
+
+                    </td>
+
+                    <td>
+
+                      <span className="time-text">
+                        <Clock size={12} />
+                        {report.time}
+                      </span>
+
+                    </td>
+
+                    <td>
+
+                      <button
+                        className="view-report-button"
+                        title="View Report"
+                      >
+                        <Eye size={15} />
+                      </button>
+
+                    </td>
+
+                  </tr>
+                ))}
 
               </tbody>
 
@@ -352,79 +534,7 @@ function Officer() {
       </main>
 
     </div>
-
   );
 }
-
-
-function StatCard({
-  icon,
-  title,
-  value
-}) {
-
-  return (
-
-    <div className="stat-card">
-
-      <div className="stat-icon">
-        {icon}
-      </div>
-
-      <div>
-
-        <span>
-          {title}
-        </span>
-
-        <strong>
-          {value}
-        </strong>
-
-      </div>
-
-    </div>
-
-  );
-
-}
-
-
-function ModelCard({
-  name,
-  probability,
-  icon
-}) {
-
-  return (
-
-    <div className="model-card">
-
-      <div className="model-card-top">
-
-        <div className="model-icon">
-          {icon}
-        </div>
-
-        <span>
-          {name}
-        </span>
-
-      </div>
-
-      <strong>
-        {probability}
-      </strong>
-
-      <small>
-        Demo value
-      </small>
-
-    </div>
-
-  );
-
-}
-
 
 export default Officer;

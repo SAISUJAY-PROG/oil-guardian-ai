@@ -1,520 +1,530 @@
+import { useState } from "react";
 import {
-  useState
-} from "react";
-
-import {
-  ArrowLeft,
-  ShieldCheck,
-  Upload,
+  MapPin,
+  Users,
+  Keyboard,
   Mic,
-  Image,
   FileText,
   Send,
-  LoaderCircle
+  History,
+  Volume2,
+  AlertTriangle
 } from "lucide-react";
 
-import {
-  Link
-} from "react-router-dom";
-
+import AccountControls from "../components/AccountControls";
 
 function Employee() {
+  const [location, setLocation] = useState(
+    "Duliajan Oilfield (Drilling)"
+  );
+
+  const [department, setDepartment] = useState(
+    "Drilling Operations"
+  );
+
+  const [mode, setMode] = useState("text");
 
   const [report, setReport] = useState("");
 
-  const [file, setFile] = useState(null);
+  const [risk, setRisk] = useState("Medium Risk");
 
-  const [result, setResult] = useState(null);
+  const [category, setCategory] = useState(
+    "Unsafe Condition"
+  );
 
-  const [loading, setLoading] = useState(false);
+  const [sifRisk, setSifRisk] = useState("65.0%");
 
-  const [error, setError] = useState("");
+  const [iogpRule, setIogpRule] = useState(
+    "Asset Integrity / Pressure"
+  );
 
+  const [analyzing, setAnalyzing] = useState(false);
 
-  const analyzeReport = async () => {
+  const [transmissions, setTransmissions] = useState([
+    {
+      id: "06-2026-7052",
+      risk: "Medium Risk",
+      status: "Submitted",
+      text:
+        "Spill detected in Sector 4 near the backup generators. Approximately 5 gallons of hydraulic fluid leaked onto the main walkway, creating a severe slip hazard.",
+      location: "Duliajan Oilfield (Drilling)",
+      department: "Drilling Operations"
+    },
+    {
+      id: "06-2026-5154",
+      risk: "Medium Risk",
+      status: "Submitted",
+      text:
+        "Pressure indicator showing abnormal readings near the drilling equipment.",
+      location: "Duliajan Oilfield (Drilling)",
+      department: "Drilling Operations"
+    }
+  ]);
 
-    if (!report.trim()) {
-
-      setError(
-        "Please enter a safety observation before submitting."
+  const loadSample = (type) => {
+    if (type === "high") {
+      setReport(
+        "Spill detected in Sector 4 near the backup generators. Approximately 5 gallons of hydraulic fluid leaked onto the main walkway, creating a severe slip hazard."
       );
 
+      setCategory("Unsafe Condition");
+      setRisk("Medium Risk");
+      setSifRisk("65.0%");
+      setIogpRule("Asset Integrity / Pressure");
+    }
+
+    if (type === "near") {
+      setReport(
+        "Worker almost slipped while walking through the maintenance area due to oil contamination on the floor."
+      );
+
+      setCategory("Near Miss");
+      setRisk("Medium Risk");
+      setSifRisk("48.0%");
+      setIogpRule("Incident Prevention");
+    }
+  };
+
+  const analyzeReport = async () => {
+    if (!report.trim()) {
       return;
     }
 
-    setLoading(true);
-    setError("");
-    setResult(null);
+    setAnalyzing(true);
 
     try {
-
       const response = await fetch(
         "http://127.0.0.1:8000/api/analyze",
         {
           method: "POST",
-
           headers: {
             "Content-Type": "application/json"
           },
-
           body: JSON.stringify({
             text: report
           })
         }
       );
 
-
       const data = await response.json();
 
-
       if (!response.ok) {
-
         throw new Error(
-          data.detail ||
-          "AI analysis failed."
+          data.detail || "AI analysis failed."
         );
-
       }
 
+      if (data.ensemble) {
+        const percentage =
+          Number(data.ensemble.sif_percentage) || 0;
 
-      if (data.error) {
+        setSifRisk(`${percentage.toFixed(1)}%`);
 
-        throw new Error(
-          data.error
-        );
-
+        if (percentage >= 70) {
+          setRisk("High Risk");
+        } else if (percentage >= 40) {
+          setRisk("Medium Risk");
+        } else {
+          setRisk("Low Risk");
+        }
       }
 
+      if (data.models) {
+        const nearMiss = data.models.near_miss;
+        const unsafeAct = data.models.unsafe_act;
+        const unsafeCondition =
+          data.models.unsafe_condition;
 
-      setResult(data);
+        const models = [
+          {
+            name: "Near Miss",
+            data: nearMiss
+          },
+          {
+            name: "Unsafe Act",
+            data: unsafeAct
+          },
+          {
+            name: "Unsafe Condition",
+            data: unsafeCondition
+          }
+        ];
 
-    } catch (err) {
+        const highest = models.reduce(
+          (current, item) => {
+            if (!item.data) return current;
 
-      setError(
-        err.message ||
-        "Unable to connect to the AI backend."
+            if (
+              Number(item.data.confidence) >
+              Number(current.data?.confidence || 0)
+            ) {
+              return item;
+            }
+
+            return current;
+          },
+          {
+            name: "Unsafe Condition",
+            data: unsafeCondition
+          }
+        );
+
+        if (highest.name === "Near Miss") {
+          setCategory("Near Miss");
+        } else if (highest.name === "Unsafe Act") {
+          setCategory("Unsafe Act");
+        } else {
+          setCategory("Unsafe Condition");
+        }
+
+        if (highest.data?.iogp_rule) {
+          setIogpRule(highest.data.iogp_rule);
+        }
+      }
+    } catch (error) {
+      console.error(
+        "AI analysis error:",
+        error
       );
-
     } finally {
-
-      setLoading(false);
-
+      setAnalyzing(false);
     }
-
   };
 
-
-  const handleFileChange = (event) => {
-
-    const selectedFile =
-      event.target.files?.[0];
-
-    if (selectedFile) {
-
-      setFile(selectedFile);
-
+  const transmitReport = async () => {
+    if (!report.trim() || analyzing) {
+      return;
     }
 
-  };
+    await analyzeReport();
 
+    const newTransmission = {
+      id: `06-2026-${Math.floor(
+        1000 + Math.random() * 8999
+      )}`,
+      risk,
+      status: "Submitted",
+      text: report,
+      location,
+      department
+    };
+
+    setTransmissions((previous) => [
+      newTransmission,
+      ...previous
+    ]);
+  };
 
   return (
-
     <div className="employee-page">
 
-      <nav className="portal-navbar">
-
-        <Link
-          to="/"
-          className="back-link"
-        >
-          <ArrowLeft size={18} />
-          Home
-        </Link>
-
-
-        <div className="portal-brand">
-
-          <ShieldCheck size={28} />
-
-          <div>
-
-            <strong>
-              OIL Guardian AI
-            </strong>
-
-            <span>
-              Employee Safety Portal
-            </span>
-
-          </div>
-
-        </div>
-
-        <div />
-
-      </nav>
-
+      <AccountControls role="Employee" />
 
       <main className="employee-container">
 
-        <div className="employee-heading">
+        <section className="hazard-log">
 
-          <span>
-            SAFETY REPORT
-          </span>
+          <div className="hazard-header">
 
-          <h1>
-            Submit a Safety Observation
-          </h1>
-
-          <p>
-            Describe the unsafe act, unsafe condition,
-            near miss or other safety observation.
-          </p>
-
-        </div>
-
-
-        <div className="employee-grid">
-
-          <section className="report-card">
-
-            <div className="card-title">
-
-              <FileText size={22} />
-
-              <div>
-
-                <h2>
-                  Observation Details
-                </h2>
-
-                <p>
-                  Provide as much detail as possible.
-                </p>
-
+            <div>
+              <div className="hazard-eyebrow">
+                LIVE HAZARD LOG
               </div>
+
+              <h1>
+                Report Incident, Condition, or Near-Miss
+              </h1>
+            </div>
+
+            <div className="sample-controls">
+
+              <span>Load Sample:</span>
+
+              <button
+                className="sample-high"
+                onClick={() => loadSample("high")}
+              >
+                High Risk
+              </button>
+
+              <button
+                className="sample-near"
+                onClick={() => loadSample("near")}
+              >
+                Near-Miss
+              </button>
 
             </div>
 
+          </div>
+
+          <div className="employee-select-grid">
+
+            <div className="employee-field">
+
+              <label>
+                <MapPin size={14} />
+                FACILITY LOCATION
+              </label>
+
+              <select
+                value={location}
+                onChange={(event) =>
+                  setLocation(event.target.value)
+                }
+              >
+                <option>
+                  Duliajan Oilfield (Drilling)
+                </option>
+
+                <option>
+                  Duliajan Oilfield (Production)
+                </option>
+
+                <option>
+                  Digboi Refinery
+                </option>
+
+                <option>
+                  Numaligarh Refinery
+                </option>
+              </select>
+
+            </div>
+
+            <div className="employee-field">
+
+              <label>
+                <Users size={14} />
+                OPERATIONAL DEPARTMENT
+              </label>
+
+              <select
+                value={department}
+                onChange={(event) =>
+                  setDepartment(event.target.value)
+                }
+              >
+                <option>
+                  Drilling Operations
+                </option>
+
+                <option>
+                  Production Operations
+                </option>
+
+                <option>
+                  Maintenance
+                </option>
+
+                <option>
+                  Electrical Operations
+                </option>
+
+                <option>
+                  HSE Department
+                </option>
+              </select>
+
+            </div>
+
+          </div>
+
+          <div className="input-mode-grid">
+
+            <button
+              className={
+                mode === "text"
+                  ? "input-mode active"
+                  : "input-mode"
+              }
+              onClick={() => setMode("text")}
+            >
+              <Keyboard size={14} />
+              Text Entry
+            </button>
+
+            <button
+              className={
+                mode === "voice"
+                  ? "input-mode active"
+                  : "input-mode"
+              }
+              onClick={() => setMode("voice")}
+            >
+              <Mic size={14} />
+              Voice Whisper AI
+            </button>
+
+            <button
+              className={
+                mode === "ocr"
+                  ? "input-mode active"
+                  : "input-mode"
+              }
+              onClick={() => setMode("ocr")}
+            >
+              <FileText size={14} />
+              PaddleOCR v4 Scan
+            </button>
+
+          </div>
+
+          <div className="report-box">
 
             <textarea
               value={report}
-              onChange={(e) =>
-                setReport(e.target.value)
+              onChange={(event) =>
+                setReport(event.target.value)
               }
-              placeholder="Example: Worker entered a confined space without performing the required gas test..."
-              maxLength={2000}
+              placeholder={
+                mode === "voice"
+                  ? "Voice Whisper AI input..."
+                  : mode === "ocr"
+                  ? "PaddleOCR v4 scanned text..."
+                  : "Describe the incident, unsafe condition, or near-miss..."
+              }
             />
 
-
-            <div className="character-count">
-
-              {report.length} / 2000
-
-            </div>
-
-
-            <div className="upload-grid">
-
-              <label className="upload-box">
-
-                <Image size={24} />
-
-                <span>
-                  Upload Image
-                </span>
-
-                <small>
-                  Evidence / handwritten report
-                </small>
-
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                />
-
-              </label>
-
-
-              <label className="upload-box">
-
-                <Mic size={24} />
-
-                <span>
-                  Upload Audio
-                </span>
-
-                <small>
-                  Voice safety observation
-                </small>
-
-                <input
-                  type="file"
-                  accept="audio/*"
-                  onChange={handleFileChange}
-                />
-
-              </label>
-
-            </div>
-
-
-            {file && (
-
-              <div className="selected-file">
-
-                <Upload size={18} />
-
-                <span>
-                  {file.name}
-                </span>
-
-              </div>
-
-            )}
-
-
-            {error && (
-
-              <div className="error-message">
-
-                {error}
-
-              </div>
-
-            )}
-
-
             <button
-              className="analyze-button"
-              onClick={analyzeReport}
-              disabled={loading}
+              className="mic-button"
+              type="button"
+              title="Voice input"
             >
-
-              {loading ? (
-
-                <>
-                  <LoaderCircle
-                    size={20}
-                    className="spin"
-                  />
-
-                  Analyzing...
-                </>
-
-              ) : (
-
-                <>
-                  <Send size={20} />
-
-                  Analyze Safety Report
-                </>
-
-              )}
-
+              <Volume2 size={17} />
             </button>
 
-          </section>
+          </div>
 
+          <div className="pretriage">
 
-          <section className="employee-info-card">
+            <div className="pretriage-header">
 
-            <div className="info-icon">
-              <BrainIcon />
+              <div className="pretriage-title">
+                <AlertTriangle size={15} />
+                AI REAL-TIME PRE-TRIAGE
+              </div>
+
+              <span
+                className={`risk-badge ${
+                  risk === "High Risk"
+                    ? "risk-high"
+                    : risk === "Low Risk"
+                    ? "risk-low"
+                    : "risk-medium"
+                }`}
+              >
+                {risk}
+              </span>
+
             </div>
+
+            <div className="triage-grid">
+
+              <div className="triage-card">
+
+                <span>CATEGORY</span>
+
+                <strong>
+                  {category}
+                </strong>
+
+              </div>
+
+              <div className="triage-card">
+
+                <span>SIF RISK</span>
+
+                <strong>
+                  {sifRisk}
+                </strong>
+
+              </div>
+
+              <div className="triage-card">
+
+                <span>IOGP RULE</span>
+
+                <strong>
+                  {iogpRule}
+                </strong>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <button
+            className="transmit-button"
+            onClick={transmitReport}
+            disabled={analyzing}
+          >
+            <Send size={19} />
+
+            {analyzing
+              ? "Analyzing Report..."
+              : `Transmit Report (${category} · ${risk})`}
+          </button>
+
+        </section>
+
+        <section className="transmissions">
+
+          <div className="transmissions-title">
+
+            <History size={20} />
 
             <h2>
-              AI Analysis Pipeline
+              My Transmissions
             </h2>
 
-            <p>
-              Your observation is analyzed by three
-              specialized safety models.
-            </p>
+          </div>
 
+          <div className="transmission-list">
 
-            <div className="pipeline-step">
+            {transmissions.map((item) => (
+              <div
+                className="transmission-card"
+                key={item.id}
+              >
 
-              <span>01</span>
+                <div className="transmission-top">
 
-              <div>
-                <strong>
-                  Near Miss
-                </strong>
+                  <strong>
+                    {item.id}
+                  </strong>
 
-                <small>
-                  Identifies near-miss risk
-                </small>
-              </div>
+                  <span className="transmission-risk">
+                    {item.risk}
+                  </span>
 
-            </div>
+                  <span className="transmission-status">
+                    {item.status}
+                  </span>
 
+                </div>
 
-            <div className="pipeline-step">
-
-              <span>02</span>
-
-              <div>
-                <strong>
-                  Unsafe Act
-                </strong>
+                <p>
+                  {item.text}
+                </p>
 
                 <small>
-                  Identifies unsafe actions
+                  {item.location} ·{" "}
+                  {item.department}
                 </small>
-              </div>
-
-            </div>
-
-
-            <div className="pipeline-step">
-
-              <span>03</span>
-
-              <div>
-                <strong>
-                  Unsafe Condition
-                </strong>
-
-                <small>
-                  Identifies hazardous conditions
-                </small>
-              </div>
-
-            </div>
-
-
-            <div className="pipeline-step">
-
-              <span>04</span>
-
-              <div>
-                <strong>
-                  Soft Voting
-                </strong>
-
-                <small>
-                  Combines model probabilities
-                </small>
-              </div>
-
-            </div>
-
-          </section>
-
-        </div>
-
-
-        {result && (
-
-          <section className="employee-result">
-
-            <h2>
-              AI Analysis Result
-            </h2>
-
-
-            <div className="result-summary">
-
-              <div>
-
-                <span>
-                  Final SIF Probability
-                </span>
-
-                <strong>
-                  {result.ensemble.sif_percentage}%
-                </strong>
 
               </div>
+            ))}
 
+          </div>
 
-              <div>
-
-                <span>
-                  Risk Level
-                </span>
-
-                <strong>
-                  {result.ensemble.risk_tier}
-                </strong>
-
-              </div>
-
-            </div>
-
-
-            <div className="result-model-grid">
-
-              <ResultModel
-                name="Near Miss"
-                data={result.models.near_miss}
-              />
-
-              <ResultModel
-                name="Unsafe Act"
-                data={result.models.unsafe_act}
-              />
-
-              <ResultModel
-                name="Unsafe Condition"
-                data={
-                  result.models.unsafe_condition
-                }
-              />
-
-            </div>
-
-          </section>
-
-        )}
+        </section>
 
       </main>
 
     </div>
-
   );
 }
-
-
-function ResultModel({
-  name,
-  data
-}) {
-
-  return (
-
-    <div className="result-model">
-
-      <span>
-        {name}
-      </span>
-
-      <strong>
-        {data.confidence}%
-      </strong>
-
-      <small>
-        {data.iogp_rule}
-      </small>
-
-    </div>
-
-  );
-
-}
-
-
-function BrainIcon() {
-
-  return (
-    <ShieldCheck size={26} />
-  );
-
-}
-
 
 export default Employee;
