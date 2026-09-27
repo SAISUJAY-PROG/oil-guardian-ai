@@ -14,8 +14,9 @@ def _load_resources():
     global _embedder, _model
 
     if _embedder is None:
-        from sentence_transformers import SentenceTransformer
-        _embedder = SentenceTransformer("all-MiniLM-L6-v2")
+        # Use the single shared copy instead of loading a second one
+        from ml_modules.shared_embedder import get_embedder
+        _embedder = get_embedder()
 
     if _model is None and MODEL_PATH.exists():
         _model = joblib.load(MODEL_PATH)
