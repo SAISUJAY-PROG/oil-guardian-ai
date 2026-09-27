@@ -1,24 +1,42 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import "./App.css";
+import {
+  BrowserRouter,
+  Routes,
+  Route
+} from "react-router-dom";
+
+import { AuthProvider } from "./context/AuthContext";
+
+import TargetCursor from "./components/TargetCursor";
+
 import Login from "./pages/Login";
 import Employee from "./pages/Employee";
 import Officer from "./pages/Officer";
-import TargetCursor from "./components/TargetCursor";
+
+import "./App.css";
 
 function App() {
   return (
-    <Router>
-      <TargetCursor
-        spinDuration={1.2}
-        cursorColor="#3b82f6"
-        cursorColorOnTarget="#fafafb"
-      />
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/employee" element={<Employee />} />
-        <Route path="/officer" element={<Officer />} />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <BrowserRouter>
+
+        <TargetCursor
+          spinDuration={1.2}
+          hideDefaultCursor={true}
+          parallaxOn={true}
+          cursorColor="#ffffff"
+          cursorColorOnTarget="#f28a18"
+        />
+
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
+
+          <Route path="/employee" element={<Employee />} />
+          <Route path="/officer" element={<Officer />} />
+        </Routes>
+
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

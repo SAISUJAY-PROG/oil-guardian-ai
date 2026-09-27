@@ -1,0 +1,14 @@
+.venv/
+.venv-paddle/
+__pycache__/
+*.pyc
+.env
+.env.local
+frontend/.env
+frontend/.env.local
+node_modules/
+dist/
+*.log
+
+test_image.jpg
+test_paddleocr.py

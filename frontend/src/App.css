@@ -610,23 +610,177 @@ a {
 .login-status-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; }
 .login-footer { margin-top: 18px; color: #39465a; font-family: "JetBrains Mono", monospace; font-size: 7px; text-align: center; }
 
-/* =========================================
-   ACCOUNT CONTROLS (TOP RIGHT)
-========================================= */
+/* =========================
+   ACCOUNT CONTROLS
+   ========================= */
 
 .account-controls {
+  position: relative;
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  width: min(1185px, calc(100% - 40px)); /* Matches the container width perfectly */
-  margin: 0 auto;
-  padding-top: 30px;
+  align-items: center;
+  gap: 10px;
+}
+
+.account-profile-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #ffffff;
+  cursor: pointer !important;
+  transition: all 0.2s ease;
+}
+
+.account-profile-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.account-avatar {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(242, 138, 24, 0.15);
+  color: #f28a18;
+  flex-shrink: 0;
+}
+
+.account-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+
+.account-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.account-role {
+  margin-top: 2px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.account-logout-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 90, 90, 0.25);
+  border-radius: 9px;
+  background: rgba(255, 70, 70, 0.08);
+  color: #ff8585;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer !important;
+  transition: all 0.2s ease;
+}
+
+.account-logout-button:hover {
+  background: rgba(255, 70, 70, 0.16);
+  border-color: rgba(255, 90, 90, 0.45);
+  color: #ffaaaa;
+}
+
+.account-logout-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed !important;
+}
+
+/* Profile popup */
+
+.profile-popup {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 260px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: #11151a;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.45);
   z-index: 1000;
 }
-.account-user-button { height: 42px; padding: 4px 11px 4px 7px; display: flex; align-items: center; gap: 9px; color: #e2e8f0; background: #172337; border: 1px solid #33445d; border-radius: 10px; cursor: pointer; transition: 0.2s; }
-.account-user-button:hover { background: #1c2b40; }
-.account-user-icon { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; color: white; background: #f59e0b; border-radius: 50%; }
-.account-user-id { font-size: 11px; font-weight: 700; }
+
+.profile-popup-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.profile-popup-header svg {
+  color: #f28a18;
+}
+
+.profile-popup-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.profile-popup-content div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.profile-popup-content small {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.profile-popup-content strong {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Mobile */
+
+@media (max-width: 700px) {
+  .account-controls {
+    gap: 6px;
+  }
+
+  .account-profile-button {
+    padding: 6px;
+  }
+
+  .account-info {
+    display: none;
+  }
+
+  .account-logout-button {
+    padding: 9px;
+  }
+
+  .account-logout-button span {
+    display: none;
+  }
+
+  .profile-popup {
+    right: 0;
+    width: 240px;
+  }
+}
 /* =========================================
    PRE TRIAGE (EMPLOYEE PANEL)
 ========================================= */
@@ -1980,4 +2134,176 @@ a {
   transform: translate(-150%, 50%);
   border-right: none;
   border-top: none;
+}
+.analysis-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 12px 15px;
+  border: 1px solid rgba(237, 63, 114, 0.45);
+  border-radius: 8px;
+  background: rgba(237, 63, 114, 0.08);
+  color: #ff6f91;
+  font-size: 13px;
+  line-height: 1.5;
+}
+/* =========================================================
+   ACCOUNT CONTROLS
+========================================================= */
+
+.account-controls {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.account-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 190px;
+  padding: 8px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.035);
+  color: #ffffff;
+  cursor: pointer !important;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.account-button:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(242, 138, 24, 0.45);
+}
+
+.account-avatar {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(242, 138, 24, 0.12);
+  border: 1px solid rgba(242, 138, 24, 0.25);
+  color: #f28a18;
+}
+
+.account-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.account-name {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.account-role {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.account-chevron {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.45);
+  transition: transform 0.2s ease;
+}
+
+.account-chevron.open {
+  transform: rotate(180deg);
+}
+
+/* Dropdown */
+
+.account-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 1000;
+  width: 190px;
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: rgba(12, 14, 24, 0.98);
+  box-shadow:
+    0 15px 40px rgba(0, 0, 0, 0.45),
+    0 0 25px rgba(242, 138, 24, 0.05);
+  backdrop-filter: blur(16px);
+}
+
+/* Logout */
+
+.account-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 11px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font-family: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer !important;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.account-menu-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.logout-item {
+  color: #ff6f91;
+}
+
+.logout-item:hover {
+  background: rgba(237, 63, 114, 0.1);
+  color: #ff6f91;
+}
+
+.account-menu-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+}
+
+/* Mobile */
+
+@media (max-width: 700px) {
+  .account-button {
+    min-width: auto;
+    padding: 7px;
+  }
+
+  .account-info {
+    display: none;
+  }
+
+  .account-chevron {
+    display: none;
+  }
+
+  .account-menu {
+    right: 0;
+  }
 }
