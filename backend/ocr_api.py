@@ -1,38 +1,49 @@
-﻿import os
+import os
 import tempfile
 import json
 
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from paddleocr import PaddleOCR
-
 app = FastAPI(
     title="OIL Guardian AI - OCR API",
     description="Lightweight PaddleOCR service for safety observation images",
-    version="1.1.0"
+    version="1.2.0"
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173"
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-ocr = PaddleOCR(
-    text_detection_model_name="PP-OCRv5_mobile_det",
-    text_recognition_model_name="PP-OCRv5_mobile_rec",
-    use_doc_orientation_classify=False,
-    use_doc_unwarping=False,
-    use_textline_orientation=False,
-    device="cpu",
-    enable_mkldnn=False
-)
+ocr = None
+
+
+def get_ocr():
+    global ocr
+
+    if ocr is None:
+        print("Loading PaddleOCR...")
+
+        from paddleocr import PaddleOCR
+
+        ocr = PaddleOCR(
+            text_detection_model_name="PP-OCRv5_mobile_det",
+            text_recognition_model_name="PP-OCRv5_mobile_rec",
+            use_doc_orientation_classify=False,
+            use_doc_unwarping=False,
+            use_textline_orientation=False,
+            device="cpu",
+            enable_mkldnn=False
+        )
+
+        print("PaddleOCR loaded successfully.")
+
+    return ocr
+
 
 @app.get("/")
 def root():
@@ -41,15 +52,19 @@ def root():
         "status": "online"
     }
 
+
 @app.get("/api/ocr/health")
 def health():
     return {
         "status": "healthy",
-        "service": "PaddleOCR"
+        "service": "PaddleOCR",
+        "ocr_loaded": ocr is not None
     }
+
 
 @app.post("/api/ocr")
 async def extract_text(file: UploadFile = File(...)):
+
     allowed_types = {
         "image/jpeg",
         "image/png",
@@ -82,12 +97,15 @@ async def extract_text(file: UploadFile = File(...)):
             temp_file.write(contents)
             temp_path = temp_file.name
 
-        results = ocr.predict(temp_path)
+        ocr_engine = get_ocr()
+
+        results = ocr_engine.predict(temp_path)
 
         extracted_lines = []
         confidence_scores = []
 
         for result in results:
+
             if not hasattr(result, "json"):
                 continue
 
@@ -106,6 +124,7 @@ async def extract_text(file: UploadFile = File(...)):
 
             for text in texts:
                 cleaned = str(text).strip()
+
                 if cleaned:
                     extracted_lines.append(cleaned)
 
@@ -137,12 +156,14 @@ async def extract_text(file: UploadFile = File(...)):
 
     except Exception as error:
         print("OCR error:", error)
+
         raise HTTPException(
             status_code=500,
             detail=f"OCR processing failed: {str(error)}"
         )
 
     finally:
+
         if temp_path and os.path.exists(temp_path):
             try:
                 os.remove(temp_path)
