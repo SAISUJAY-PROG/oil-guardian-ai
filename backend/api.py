@@ -1,4 +1,6 @@
-from fastapi import FastAPI
+import os
+
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -24,12 +26,23 @@ app = FastAPI(
 )
 
 
+# Allowed frontend origins. Extra origins can be added on Render with
+# ALLOWED_ORIGINS="https://a.com,https://b.com"
+DEFAULT_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://oil-guardian-ai-xxhn.onrender.com",
+]
+
+extra_origins = [
+    origin.strip().rstrip("/")
+    for origin in os.getenv("ALLOWED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173"
-    ],
+    allow_origins=DEFAULT_ORIGINS + extra_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -62,15 +75,21 @@ def analyze_report(request: AnalyzeRequest):
     text = request.text.strip()
 
     if not text:
-        return {
-            "error": "Safety observation text is required."
-        }
+        raise HTTPException(
+            status_code=400,
+            detail="Safety observation text is required."
+        )
 
-    near_miss = analyze_near_miss(text)
-
-    unsafe_act = analyze_unsafe_act(text)
-
-    unsafe_condition = analyze_unsafe_condition(text)
+    try:
+        near_miss = analyze_near_miss(text)
+        unsafe_act = analyze_unsafe_act(text)
+        unsafe_condition = analyze_unsafe_condition(text)
+    except Exception as error:
+        print("Model inference error:", error)
+        raise HTTPException(
+            status_code=500,
+            detail="AI model inference failed. Please try again."
+        )
 
     ensemble = soft_vote(
         near_miss["confidence"] / 100,
