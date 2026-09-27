@@ -1,18 +1,17 @@
-import os
+﻿import os
 import tempfile
+import json
 
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from paddleocr import PaddleOCR
 
-
 app = FastAPI(
     title="OIL Guardian AI - OCR API",
-    description="PaddleOCR service for safety observation images",
-    version="1.0.0"
+    description="Lightweight PaddleOCR service for safety observation images",
+    version="1.1.0"
 )
-
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,13 +24,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 ocr = PaddleOCR(
-    lang="en",
+    text_detection_model_name="PP-OCRv5_mobile_det",
+    text_recognition_model_name="PP-OCRv5_mobile_rec",
+    use_doc_orientation_classify=False,
+    use_doc_unwarping=False,
+    use_textline_orientation=False,
     device="cpu",
     enable_mkldnn=False
 )
-
 
 @app.get("/")
 def root():
@@ -40,7 +41,6 @@ def root():
         "status": "online"
     }
 
-
 @app.get("/api/ocr/health")
 def health():
     return {
@@ -48,10 +48,8 @@ def health():
         "service": "PaddleOCR"
     }
 
-
 @app.post("/api/ocr")
 async def extract_text(file: UploadFile = File(...)):
-
     allowed_types = {
         "image/jpeg",
         "image/png",
@@ -73,11 +71,7 @@ async def extract_text(file: UploadFile = File(...)):
             detail="Uploaded image is empty."
         )
 
-    suffix = os.path.splitext(file.filename or "")[1]
-
-    if not suffix:
-        suffix = ".jpg"
-
+    suffix = os.path.splitext(file.filename or "")[1] or ".jpg"
     temp_path = None
 
     try:
@@ -85,7 +79,6 @@ async def extract_text(file: UploadFile = File(...)):
             delete=False,
             suffix=suffix
         ) as temp_file:
-
             temp_file.write(contents)
             temp_path = temp_file.name
 
@@ -95,15 +88,12 @@ async def extract_text(file: UploadFile = File(...)):
         confidence_scores = []
 
         for result in results:
-
             if not hasattr(result, "json"):
                 continue
 
             data = result.json
 
             if isinstance(data, str):
-                import json
-
                 try:
                     data = json.loads(data)
                 except json.JSONDecodeError:
@@ -116,7 +106,6 @@ async def extract_text(file: UploadFile = File(...)):
 
             for text in texts:
                 cleaned = str(text).strip()
-
                 if cleaned:
                     extracted_lines.append(cleaned)
 
@@ -147,16 +136,13 @@ async def extract_text(file: UploadFile = File(...)):
         }
 
     except Exception as error:
-
         print("OCR error:", error)
-
         raise HTTPException(
             status_code=500,
             detail=f"OCR processing failed: {str(error)}"
         )
 
     finally:
-
         if temp_path and os.path.exists(temp_path):
             try:
                 os.remove(temp_path)
