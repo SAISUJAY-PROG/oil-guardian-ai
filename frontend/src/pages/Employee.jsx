@@ -17,6 +17,9 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import AccountControls from "../components/AccountControls";
 
+// Backend URL comes from Render env var VITE_API_URL; falls back to local dev server
+const API_URL = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+
 function Employee() {
   const [location, setLocation] = useState("Duliajan Oilfield (Drilling)");
   const [department, setDepartment] = useState("Drilling Operations");
@@ -30,6 +33,7 @@ function Employee() {
   const [sifRisk, setSifRisk] = useState("");
   const [iogpRule, setIogpRule] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState("");
 
   const [transmissions, setTransmissions] = useState([
     {
@@ -50,39 +54,33 @@ function Employee() {
     }
   ]);
 
+  // Sample buttons only fill in example text; the real AI produces the result
   const loadSample = (type) => {
     if (type === "high") {
       setReport(
-        "Spill detected in Sector 4 near the backup generators. Approximately 5 gallons of hydraulic fluid leaked onto the main walkway, creating a severe slip hazard."
+        "Rigger standing directly under suspended drill collar while crane was lifting it during rig-up. Tag line not used and exclusion zone not barricaded."
       );
-      setCategory("Unsafe Condition");
-      setRisk("High Risk");
-      setSifRisk("85.0%");
-      setIogpRule("Asset Integrity / Pressure");
     }
 
     if (type === "near") {
       setReport(
         "Worker almost slipped while walking through the maintenance area due to oil contamination on the floor."
       );
-      setCategory("Near Miss");
-      setRisk("Medium Risk");
-      setSifRisk("48.0%");
-      setIogpRule("Incident Prevention");
     }
 
-    // Automatically show the analysis box for samples
-    setHasAnalyzed(true);
-    setMode("text"); // Switch back to text mode if they load a sample
+    setHasAnalyzed(false);
+    setAnalysisError("");
+    setMode("text");
   };
 
   const analyzeReport = async () => {
     if (!report.trim()) return;
 
     setAnalyzing(true);
+    setAnalysisError("");
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/analyze", {
+      const response = await fetch(`${API_URL}/api/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: report })
@@ -90,8 +88,8 @@ function Employee() {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.detail || "AI analysis failed.");
+      if (!response.ok || data.error) {
+        throw new Error(data.detail || data.error || "AI analysis failed.");
       }
 
       if (data.ensemble) {
@@ -139,12 +137,11 @@ function Employee() {
       setHasAnalyzed(true);
     } catch (error) {
       console.error("AI analysis error:", error);
-      // Fallback for demonstration if backend isn't running
-      setCategory("Unsafe Condition");
-      setRisk("Medium Risk");
-      setSifRisk("65.0%");
-      setIogpRule("Asset Integrity / Pressure");
-      setHasAnalyzed(true);
+      // No fake results: tell the user honestly that analysis failed
+      setHasAnalyzed(false);
+      setAnalysisError(
+        "AI analysis failed. The server may be waking up (this can take up to a minute). Please try again."
+      );
     } finally {
       setAnalyzing(false);
     }
@@ -188,7 +185,7 @@ function Employee() {
             <div className="sample-controls">
               <span>Load Sample:</span>
               <button className="sample-high cursor-target" onClick={() => loadSample("high")}>
-                High Risk
+                Lifting Hazard
               </button>
               <button className="sample-near cursor-target" onClick={() => loadSample("near")}>
                 Near-Miss
@@ -284,6 +281,7 @@ function Employee() {
               onChange={(e) => {
                 setReport(e.target.value);
                 if (hasAnalyzed) setHasAnalyzed(false); // Hide analysis if they edit text
+                if (analysisError) setAnalysisError("");
               }}
               placeholder={
                 mode === "voice"
@@ -297,6 +295,23 @@ function Employee() {
               <Volume2 size={17} />
             </button>
           </div>
+
+          {analysisError && (
+            <div
+              role="alert"
+              style={{
+                marginTop: "12px",
+                padding: "10px 14px",
+                borderRadius: "8px",
+                background: "rgba(239, 68, 68, 0.12)",
+                border: "1px solid rgba(239, 68, 68, 0.45)",
+                color: "#fca5a5",
+                fontSize: "13px"
+              }}
+            >
+              {analysisError}
+            </div>
+          )}
 
           <AnimatePresence>
             {hasAnalyzed && (
