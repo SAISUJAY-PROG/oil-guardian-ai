@@ -15,8 +15,9 @@ def _load_resources():
             raise FileNotFoundError(f"Near Miss model not found: {MODEL_PATH}")
         _model = joblib.load(MODEL_PATH)
     if _embedder is None:
-        from sentence_transformers import SentenceTransformer
-        _embedder = SentenceTransformer("all-MiniLM-L6-v2")
+        # Use the single shared copy instead of loading a second one
+        from ml_modules.shared_embedder import get_embedder
+        _embedder = get_embedder()
 
 def analyze(text: str) -> dict:
     text = (text or "").strip()
