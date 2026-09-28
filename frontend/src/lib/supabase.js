@@ -1,13 +1,34 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabasePublishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-if (!supabaseUrl || !supabasePublishableKey) {
-  console.warn("Supabase environment variables are missing.");
+let client = null
+
+const isValid = supabaseUrl && 
+                supabaseAnonKey && 
+                !supabaseUrl.includes('placeholder') &&
+                supabaseUrl.startsWith('http')
+
+if (isValid) {
+  try {
+    client = createClient(supabaseUrl, supabaseAnonKey)
+  } catch (err) {
+    console.warn('Supabase initialization failed:', err)
+  }
 }
 
-export const supabase = createClient(
-  supabaseUrl,
-  supabasePublishableKey
-);
+// Fallback mock auth to prevent crashing when Supabase keys are not set
+export const supabase = client || {
+  auth: {
+    getSession: async () => ({ data: { session: null }, error: null }),
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    signInWithPassword: async () => ({ data: null, error: new Error('Supabase not configured') }),
+    signOut: async () => ({ error: null }),
+  },
+  from: () => ({
+    select: () => ({
+      order: () => Promise.resolve({ data: [], error: null }),
+    }),
+  }),
+}

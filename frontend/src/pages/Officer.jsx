@@ -1,3 +1,4 @@
+import DashboardView from "../components/dashboard/DashboardView";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -124,7 +125,7 @@ function Officer() {
         <AnimatePresence mode="wait">
           {!selectedLog ? (
             /* =========================================
-               DASHBOARD VIEW (TABLE)
+               DASHBOARD VIEW (TABLE + SIF ANALYTICS)
             ========================================= */
             <motion.div key="dashboard" variants={pageVariants} initial="hidden" animate="show" exit="exit">
               <div className="telemetry-header">
@@ -221,6 +222,11 @@ function Officer() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* SIF-Precursor Risk Intelligence Dashboard (Phase 4) */}
+              <div style={{ marginTop: '2.5rem' }}>
+                <DashboardView />
               </div>
             </motion.div>
           ) : (

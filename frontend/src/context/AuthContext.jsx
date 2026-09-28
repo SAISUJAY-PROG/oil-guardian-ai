@@ -1,104 +1,67 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
-const AuthContext = createContext(null);
+const AuthContext = createContext({});
 
-export function AuthProvider({ children }) {
-  const [session, setSession] = useState(null);
-  const [profile, setProfile] = useState(null);
+export const useAuth = () => useContext(AuthContext);
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  const loadProfile = async (userId) => {
-    if (!userId) {
-      setProfile(null);
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
-
-    if (error) {
-      console.error("Profile loading error:", error);
-      setProfile(null);
-      return;
-    }
-
-    setProfile(data);
-  };
 
   useEffect(() => {
     let mounted = true;
 
-    const initializeAuth = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+    async function initAuth() {
+      try {
+        if (!supabase?.auth?.getSession) {
+          if (mounted) setLoading(false);
+          return;
+        }
 
-      if (!mounted) return;
-
-      setSession(session);
-
-      if (session?.user) {
-        await loadProfile(session.user.id);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (mounted) {
+          setUser(session?.user ?? null);
+          setRole(session?.user?.user_metadata?.role ?? "officer");
+        }
+      } catch (err) {
+        console.warn("Auth initialization error:", err);
+      } finally {
+        if (mounted) setLoading(false);
       }
+    }
 
-      if (mounted) {
-        setLoading(false);
-      }
-    };
+    initAuth();
 
-    initializeAuth();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!mounted) return;
-
-      setSession(session);
-
-      if (session?.user) {
-        await loadProfile(session.user.id);
-      } else {
-        setProfile(null);
-      }
-
-      setLoading(false);
-    });
+    let subscription = null;
+    try {
+      const authListener = supabase?.auth?.onAuthStateChange((_event, session) => {
+        if (mounted) {
+          setUser(session?.user ?? null);
+          setRole(session?.user?.user_metadata?.role ?? "officer");
+          setLoading(false);
+        }
+      });
+      subscription = authListener?.data?.subscription;
+    } catch (err) {
+      console.warn("Auth listener error:", err);
+      if (mounted) setLoading(false);
+    }
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      if (subscription?.unsubscribe) {
+        subscription.unsubscribe();
+      }
     };
   }, []);
 
-  const refreshProfile = async () => {
-    if (session?.user) {
-      await loadProfile(session.user.id);
-    }
-  };
-
-  const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      console.error("Sign out error:", error);
-      throw error;
-    }
-
-    setSession(null);
-    setProfile(null);
-  };
-
   const value = {
-    session,
-    user: session?.user || null,
-    profile,
+    user,
+    role,
     loading,
-    refreshProfile,
-    signOut,
+    signOut: () => supabase.auth.signOut(),
   };
 
   return (
@@ -106,14 +69,4 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-
-  if (!context) {
-    throw new Error("useAuth must be used inside AuthProvider");
-  }
-
-  return context;
-}
+};
